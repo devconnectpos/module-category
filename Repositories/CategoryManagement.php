@@ -43,6 +43,21 @@ class CategoryManagement extends ServiceAbstract
     protected $outletFactory;
 
     /**
+     * @var \Magento\Catalog\Model\Indexer\Category\Flat\State $categoryFlatState
+     */
+    protected $_categoryFlatConfig;
+
+    /**
+     * @var \Magento\Config\Model\Config\Loader
+     */
+    protected $configLoader;
+
+    /**
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     */
+    protected $scopeConfig;
+
+    /**
      * CategoryManagement constructor.
      *
      * @param \Magento\Framework\App\RequestInterface                         $requestInterface
@@ -59,13 +74,19 @@ class CategoryManagement extends ServiceAbstract
         \Magento\Catalog\Model\CategoryFactory $categoryFactory,
         \Magento\Store\Model\Store $storeData,
         \SM\Category\Model\ResourceModel\Catalog\Category\Product $catalogCategoryProduct,
-        \SM\XRetail\Model\OutletFactory $outletFactory
+        \Magento\Catalog\Model\Indexer\Category\Flat\State $categoryFlatState,
+        \SM\XRetail\Model\OutletFactory $outletFactory,
+        \Magento\Config\Model\Config\Loader $loader,
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
     ) {
+        $this->scopeConfig               = $scopeConfig;
         $this->storeData                 = $storeData;
         $this->categoryFactory           = $categoryFactory;
         $this->categoryCollectionFactory = $categoryCollectionFactory;
+        $this->_categoryFlatConfig = $categoryFlatState;
         $this->catalogCategoryProduct    = $catalogCategoryProduct;
         $this->outletFactory             = $outletFactory;
+        $this->configLoader              = $loader;
         parent::__construct($requestInterface, $dataConfig, $storeManager);
     }
 
@@ -110,6 +131,7 @@ class CategoryManagement extends ServiceAbstract
 
                 $cat->setData('product_ids', $this->catalogCategoryProduct->getAllProductIdsByCategory($cat->getId()));
                 $cat->setData('image_url', $category->getImageUrl());
+                $cat->setData('category_child', $this->getActiveChildCategories($category));
                 $items[] = $cat;
             }
         }
@@ -188,7 +210,16 @@ class CategoryManagement extends ServiceAbstract
             $collection->addFieldToFilter('entity_id', ['in' => explode(",", $ids)]);
         }
 
-        $collection->addIsActiveFilter();
+        if(!$searchCriteria->getData('isPWA')){
+            $collection->addIsActiveFilter();
+        }
+        $collection->setCurPage(is_nan($searchCriteria->getData('currentPage')) ? 1 : $searchCriteria->getData('currentPage'));
+        if($searchCriteria->getData('isPWA') && !!$searchCriteria->getData('storeId')){
+            if ($this->getPWACategoryAttributeStatus($searchCriteria->getData('storeId')) === 'no') {
+                $collection->addAttributeToFilter('is_active',1);
+            }
+            $collection->addAttributeToSort('position')->addAttributeToSort('name');
+        }
         if (is_nan($searchCriteria->getData('currentPage'))) {
             $collection->setCurPage(1);
         } else {
@@ -213,5 +244,24 @@ class CategoryManagement extends ServiceAbstract
     public function getCategoryModel()
     {
         return $this->categoryFactory->create();
+    }
+
+    public function getActiveChildCategories($category)
+    {
+        $children = [];
+        if ($this->_categoryFlatConfig->isFlatEnabled() && $category->getUseFlatResource()) {
+            $subcategories = (array)$category->getChildrenNodes();
+        } else {
+            $subcategories = $category->getChildren();
+        }
+        if($subcategories == ""){
+            return [];
+        }
+        return explode(",",$subcategories);
+    }
+
+    public function getPWACategoryAttributeStatus($storeID) {
+        $disableCategory = $this->scopeConfig->getValue('pwa/product_category/pwa_show_disable_categories', 'stores',$storeID);
+        return $disableCategory;
     }
 }
