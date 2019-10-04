@@ -257,7 +257,11 @@ class CategoryManagement extends ServiceAbstract
         if($subcategories == ""){
             return [];
         }
-        return explode(",",$subcategories);
+        if (is_array($subcategories)){
+            return $subcategories;
+        } else {
+            return explode(",",$subcategories);
+        }
     }
 
     public function getPWACategoryAttributeStatus($storeID) {
