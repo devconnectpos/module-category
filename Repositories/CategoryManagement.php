@@ -234,7 +234,7 @@ class CategoryManagement extends ServiceAbstract
                 $searchCriteria->getData('pageSize')
             );
         }
-
+        $collection->getSelect()->orWhere('e.entity_id = ' . $rootCategoryId);
         return $collection;
     }
 
