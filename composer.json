@@ -2,7 +2,7 @@
 	"name": "connectpos/module-category",
 	"description": "N/A",
 	"type": "magento2-module",
-	"version": "20.06.23",
+	"version": "21.02.02",
 	"license": [
 		"proprietary"
 	],
