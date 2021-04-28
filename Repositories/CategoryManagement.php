@@ -129,7 +129,7 @@ class CategoryManagement extends ServiceAbstract
                 $category->load($category->getEntityId());
                 $cat->addData($category->getData());
 
-                $cat->setData('product_ids', $this->catalogCategoryProduct->getAllProductIdsByCategory($cat->getId()));
+                $cat->setData('product_ids', $category->getProductCollection()->getAllIds());
                 $cat->setData('image_url', $category->getImageUrl());
                 $cat->setData('category_child', $this->getActiveChildCategories($category));
                 $items[] = $cat;
