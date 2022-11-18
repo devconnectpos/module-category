@@ -60,33 +60,34 @@ class CategoryManagement extends ServiceAbstract
     /**
      * CategoryManagement constructor.
      *
-     * @param \Magento\Framework\App\RequestInterface                         $requestInterface
-     * @param \SM\XRetail\Helper\DataConfig                                   $dataConfig
-     * @param \Magento\Store\Model\StoreManagerInterface                      $storeManager
+     * @param \Magento\Framework\App\RequestInterface $requestInterface
+     * @param \SM\XRetail\Helper\DataConfig $dataConfig
+     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $categoryCollectionFactory
-     * @param \Magento\Catalog\Model\CategoryFactory                          $categoryFactory
+     * @param \Magento\Catalog\Model\CategoryFactory $categoryFactory
      */
     public function __construct(
-        \Magento\Framework\App\RequestInterface $requestInterface,
-        \SM\XRetail\Helper\DataConfig $dataConfig,
-        \Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Framework\App\RequestInterface                         $requestInterface,
+        \SM\XRetail\Helper\DataConfig                                   $dataConfig,
+        \Magento\Store\Model\StoreManagerInterface                      $storeManager,
         \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $categoryCollectionFactory,
-        \Magento\Catalog\Model\CategoryFactory $categoryFactory,
-        \Magento\Store\Model\Store $storeData,
-        \SM\Category\Model\ResourceModel\Catalog\Category\Product $catalogCategoryProduct,
-        \Magento\Catalog\Model\Indexer\Category\Flat\State $categoryFlatState,
-        \SM\XRetail\Model\OutletFactory $outletFactory,
-        \Magento\Config\Model\Config\Loader $loader,
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-    ) {
-        $this->scopeConfig               = $scopeConfig;
-        $this->storeData                 = $storeData;
-        $this->categoryFactory           = $categoryFactory;
+        \Magento\Catalog\Model\CategoryFactory                          $categoryFactory,
+        \Magento\Store\Model\Store                                      $storeData,
+        \SM\Category\Model\ResourceModel\Catalog\Category\Product       $catalogCategoryProduct,
+        \Magento\Catalog\Model\Indexer\Category\Flat\State              $categoryFlatState,
+        \SM\XRetail\Model\OutletFactory                                 $outletFactory,
+        \Magento\Config\Model\Config\Loader                             $loader,
+        \Magento\Framework\App\Config\ScopeConfigInterface              $scopeConfig
+    )
+    {
+        $this->scopeConfig = $scopeConfig;
+        $this->storeData = $storeData;
+        $this->categoryFactory = $categoryFactory;
         $this->categoryCollectionFactory = $categoryCollectionFactory;
         $this->_categoryFlatConfig = $categoryFlatState;
-        $this->catalogCategoryProduct    = $catalogCategoryProduct;
-        $this->outletFactory             = $outletFactory;
-        $this->configLoader              = $loader;
+        $this->catalogCategoryProduct = $catalogCategoryProduct;
+        $this->outletFactory = $outletFactory;
+        $this->configLoader = $loader;
         parent::__construct($requestInterface, $dataConfig, $storeManager);
     }
 
@@ -119,7 +120,7 @@ class CategoryManagement extends ServiceAbstract
 
         $this->getSearchResult()->setSearchCriteria($searchCriteria);
         $collection = $this->getCategoryCollection($searchCriteria);
-        $items      = [];
+        $items = [];
 
         if ($collection->getLastPageNumber() < $searchCriteria->getData('currentPage')) {
         } else {
@@ -137,9 +138,9 @@ class CategoryManagement extends ServiceAbstract
         }
 
         return $this->getSearchResult()
-                    ->setItems($items)
-                    ->setLastPageNumber($collection->getLastPageNumber())
-                    ->setTotalCount($collection->getSize());
+            ->setItems($items)
+            ->setLastPageNumber($collection->getLastPageNumber())
+            ->setTotalCount($collection->getSize());
     }
 
     /**
@@ -156,7 +157,7 @@ class CategoryManagement extends ServiceAbstract
 
         $this->getSearchResult()->setSearchCriteria($searchCriteria);
         $collection = $this->getCategoryCollection($searchCriteria);
-        $items      = [];
+        $items = [];
         foreach ($collection as $category) {
             $cat = new LoadCategory();
             /** @var \Magento\Catalog\Model\Category $category */
@@ -167,9 +168,9 @@ class CategoryManagement extends ServiceAbstract
         }
 
         return $this->getSearchResult()
-                    ->setItems($items)
-                    ->setLastPageNumber($collection->getLastPageNumber())
-                    ->setTotalCount($collection->getSize());
+            ->setItems($items)
+            ->setLastPageNumber($collection->getLastPageNumber())
+            ->setTotalCount($collection->getSize());
     }
 
 
@@ -207,25 +208,25 @@ class CategoryManagement extends ServiceAbstract
             } else {
                 $ids = $searchCriteria->getData('entity_id');
             }
-            $collection->addFieldToFilter('entity_id', ['in' => explode(",", $ids)]);
+            $collection->addFieldToFilter('entity_id', ['in' => explode(",", (string)$ids)]);
         }
 
-        if(!$searchCriteria->getData('isPWA')){
+        if (!$searchCriteria->getData('isPWA')) {
             $collection->addIsActiveFilter();
         }
-        $collection->setCurPage(is_nan($searchCriteria->getData('currentPage')) ? 1 : $searchCriteria->getData('currentPage'));
-        if($searchCriteria->getData('isPWA') && !!$searchCriteria->getData('storeId')){
+        $collection->setCurPage(is_nan((float)$searchCriteria->getData('currentPage')) ? 1 : $searchCriteria->getData('currentPage'));
+        if ($searchCriteria->getData('isPWA') && !!$searchCriteria->getData('storeId')) {
             if ($this->getPWACategoryAttributeStatus($searchCriteria->getData('storeId')) === 'no') {
-                $collection->addAttributeToFilter('is_active',1);
+                $collection->addAttributeToFilter('is_active', 1);
             }
             $collection->addAttributeToSort('position')->addAttributeToSort('name');
         }
-        if (is_nan($searchCriteria->getData('currentPage'))) {
+        if (is_nan((float)$searchCriteria->getData('currentPage'))) {
             $collection->setCurPage(1);
         } else {
             $collection->setCurPage($searchCriteria->getData('currentPage'));
         }
-        if (is_nan($searchCriteria->getData('pageSize'))) {
+        if (is_nan((float)$searchCriteria->getData('pageSize'))) {
             $collection->setPageSize(
                 DataConfig::PAGE_SIZE_LOAD_PRODUCT
             );
@@ -254,18 +255,19 @@ class CategoryManagement extends ServiceAbstract
         } else {
             $subcategories = $category->getChildren();
         }
-        if($subcategories == ""){
+        if ($subcategories == "") {
             return [];
         }
-        if (is_array($subcategories)){
+        if (is_array($subcategories)) {
             return $subcategories;
         } else {
-            return explode(",",$subcategories);
+            return explode(",", (string)$subcategories);
         }
     }
 
-    public function getPWACategoryAttributeStatus($storeID) {
-        $disableCategory = $this->scopeConfig->getValue('pwa/product_category/pwa_show_disable_categories', 'stores',$storeID);
+    public function getPWACategoryAttributeStatus($storeID)
+    {
+        $disableCategory = $this->scopeConfig->getValue('pwa/product_category/pwa_show_disable_categories', 'stores', $storeID);
         return $disableCategory;
     }
 }
